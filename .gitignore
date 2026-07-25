@@ -25,4 +25,5 @@ Thumbs.db
 .idea/
 
 progress.md
-docs/
+docs/api.md
+docs/deployment.md

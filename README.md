@@ -60,12 +60,7 @@ fixtown/
 │   ├── server.js                # Express app entry point
 │   └── package.json
 │
-├── docs/                        # Additional documentation
-│   ├── api.md                   # API endpoint reference
-│   └── deployment.md            # Deployment guide
-│
 ├── README.md                    # This file
-└── progress.md                  # Step-by-step build log
 ```
 
 ---
