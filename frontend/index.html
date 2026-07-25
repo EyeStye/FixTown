@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FixTown — Fix Your City</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </head>
+  <body>
+    <!-- Background canvas — drawn before React mounts -->
+    <canvas id="bg-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;"></canvas>
+
+    <script>
+    (function () {
+      const canvas = document.getElementById('bg-canvas');
+      const ctx    = canvas.getContext('2d');
+      const CELL   = 48; // px per grid cell
+
+      // Palette (matches CSS vars)
+      const BG          = '#0a0a0a';
+      const AMBER       = 'rgba(251,191,36,';
+      const CIVIC       = 'rgba(107,114,128,';
+      const NAVY_BLOCK  = 'rgba(36,36,36,';
+
+      function draw() {
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+        canvas.width  = W;
+        canvas.height = H;
+
+        const cols = Math.ceil(W / CELL);
+        const rows = Math.ceil(H / CELL);
+
+        // Fill base
+        ctx.fillStyle = BG;
+        ctx.fillRect(0, 0, W, H);
+
+        // ── RIGHT SIDE: true checkerboard (cols > 60% of width) ──
+        const splitCol = Math.floor(cols * 0.62); // where right zone starts
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = splitCol; c < cols; c++) {
+            // classic chessboard: color if (r+c) is even
+            if ((r + c) % 2 === 0) {
+              // alternate between amber and civic tints
+              const tint = ((r + c) / 2) % 3 === 0 ? AMBER : CIVIC;
+              ctx.fillStyle = tint + '0.07)';
+              ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+            }
+          }
+        }
+
+        // ── LEFT SIDE: random rectangles + scattered single cells ──
+        // Seeded-ish: fixed positions so it looks intentional, not jittery on resize
+        const rects = [
+          // [col, row, w, h, colorType]  — colorType: 0=amber, 1=civic, 2=navy
+          [1,  1,  4, 2, 0],
+          [0,  5,  2, 3, 2],
+          [3,  6,  3, 2, 1],
+          [1,  10, 2, 4, 0],
+          [5,  3,  2, 2, 2],
+          [4,  9,  4, 2, 1],
+          [0,  14, 3, 2, 0],
+          [2,  17, 2, 3, 2],
+          [6,  13, 3, 3, 0],
+          [1,  21, 4, 2, 1],
+          [5,  19, 2, 2, 2],
+          [3,  24, 3, 2, 0],
+          [0,  27, 2, 4, 1],
+          [6,  26, 2, 3, 2],
+          [8,  2,  2, 2, 1],
+          [9,  7,  3, 2, 0],
+          [7,  11, 2, 3, 2],
+          [10, 15, 2, 2, 1],
+          [8,  20, 3, 2, 0],
+          [11, 5,  2, 3, 2],
+          [10, 23, 2, 2, 1],
+          [12, 10, 3, 2, 0],
+          [13, 18, 2, 3, 2],
+        ];
+
+        const colors = [AMBER, CIVIC, NAVY_BLOCK];
+        const alphas = ['0.13)', '0.10)', '0.40)'];
+
+        rects.forEach(([c, r, w, h, t]) => {
+          // Only draw if within left zone
+          if (c + w > splitCol) return;
+          if (r + h > rows + 2) return;
+          ctx.fillStyle = colors[t] + alphas[t];
+          ctx.fillRect(c * CELL, r * CELL, w * CELL, h * CELL);
+        });
+
+        // Scattered individual lit cells on the left
+        const singles = [
+          [2, 4, 1], [5, 7, 0], [1, 9, 2], [8, 5, 1], [4, 12, 0],
+          [0, 16, 1], [7, 16, 2], [3, 20, 0], [9, 13, 1], [6, 22, 2],
+          [2, 25, 0], [11, 9, 1], [0, 23, 2], [12, 3, 0], [10, 28, 1],
+          [5, 29, 2], [13, 14, 0], [1, 30, 1], [8, 30, 2],
+        ];
+
+        singles.forEach(([c, r, t]) => {
+          if (c >= splitCol) return;
+          if (r >= rows + 2) return;
+          ctx.fillStyle = colors[t] + alphas[t];
+          ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+        });
+      }
+
+      draw();
+
+      // Redraw on resize (debounced)
+      let timer;
+      window.addEventListener('resize', () => {
+        clearTimeout(timer);
+        timer = setTimeout(draw, 120);
+      });
+    })();
+    </script>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
